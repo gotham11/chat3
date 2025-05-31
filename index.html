@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Peer-to-Peer Chat</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .setup-panel {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        
+        .setup-panel h2 {
+            margin-bottom: 20px;
+            color: #4CAF50;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .setup-panel h2 i {
+            font-size: 28px;
+        }
+        
+        .instructions {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .instructions ul {
+            padding-left: 20px;
+            margin: 15px 0;
+        }
+        
+        .instructions li {
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+        
+        .connection-controls {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .control-group {
+            flex: 1;
+            min-width: 300px;
+        }
+        
+        .control-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+        
+        input {
+            flex: 1;
+            padding: 15px 20px;
+            border-radius: 30px;
+            border: none;
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            font-size: 16px;
+            outline: none;
+            transition: background 0.3s;
+        }
+        
+        input:focus {
+            background: rgba(255, 255, 255, 0.25);
+            box-shadow: 0 0 0 2px #4CAF50;
+        }
+        
+        input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        button {
+            padding: 15px 25px;
+            border-radius: 30px;
+            border: none;
+            background: linear-gradient(to right, #4CAF50, #2E7D32);
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            background: linear-gradient(to right, #43A047, #1B5E20);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        button.copy {
+            background: linear-gradient(to right, #2196F3, #0D47A1);
+        }
+        
+        button.copy:hover {
+            background: linear-gradient(to right, #1E88E5, #0D47A1);
+        }
+        
+        button.secondary {
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        button.secondary:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+        
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 15px;
+            background: rgba(0, 0, 0, 0.3);
+        }
+        
+        .status-indicator {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: #f44336;
+        }
+        
+        .status.connected .status-indicator {
+            background: #4CAF50;
+        }
+        
+        .chat-container {
+            display: none;
+            width: 100%;
+            height: 70vh;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            overflow: hidden;
+            flex-direction: column;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .chat-header {
+            background: rgba(0, 0, 0, 0.4);
+            color: white;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .logo i {
+            font-size: 28px;
+            color: #4CAF50;
+        }
+        
+        .logo h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+        
+        .chat-area {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .message {
+            max-width: 75%;
+            padding: 15px;
+            border-radius: 18px;
+            position: relative;
+            animation: fadeIn 0.3s ease;
+            word-wrap: break-word;
+        }
+        
+        .received {
+            align-self: flex-start;
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            border-bottom-left-radius: 5px;
+        }
+        
+        .sent {
+            align-self: flex-end;
+            background: linear-gradient(to right, #4CAF50, #2E7D32);
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+        
+        .system {
+            align-self: center;
+            background: rgba(0, 0, 0, 0.3);
+            color: #aaa;
+            font-size: 0.9em;
+            max-width: 90%;
+            text-align: center;
+        }
+        
+        .message-info {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            font-size: 12px;
+            opacity: 0.8;
+        }
+        
+        .input-area {
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            display: flex;
+            gap: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .message-input {
+            flex: 1;
+            padding: 15px 20px;
+            border-radius: 30px;
+            border: none;
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            font-size: 16px;
+            outline: none;
+            transition: background 0.3s;
+        }
+        
+        .send-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .user-info {
+            padding: 10px 20px;
+            background: rgba(0, 0, 0, 0.25);
+            color: white;
+            font-size: 14px;
+            display: flex;
+            gap: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .user {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .user-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: linear-gradient(to right, #FF5722, #E64A19);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 14px;
+        }
+        
+        .typing-indicator {
+            padding: 10px 20px;
+            background: rgba(0, 0, 0, 0.2);
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+            font-style: italic;
+            display: none;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .chat-area::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .chat-area::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+        
+        .chat-area::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+        }
+        
+        .chat-area::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        @media (max-width: 768px) {
+            .chat-container {
+                height: 60vh;
+            }
+            
+            .message {
+                max-width: 85%;
+            }
+            
+            .connection-controls {
+                flex-direction: column;
+            }
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            font-weight: 500;
+            transform: translateX(200%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification.success {
+            border-left: 4px solid #4CAF50;
+        }
+        
+        .notification.error {
+            border-left: 4px solid #f44336;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="setup-panel">
+            <h2><i class="fas fa-plug"></i> Connect to Another User</h2>
+            
+            <div class="instructions">
+                <p>To start chatting with someone else:</p>
+                <ol>
+                    <li><strong>You are User 1</strong> - Click "Generate ID" to create your unique connection ID</li>
+                    <li><strong>Share your ID</strong> - Send this ID to the person you want to chat with</li>
+                    <li><strong>Your friend is User 2</strong> - They should enter your ID and click "Connect"</li>
+                    <li><strong>Start chatting</strong> - Once connected, you can send messages in real-time</li>
+                </ol>
+            </div>
+            
+            <div class="connection-controls">
+                <div class="control-group">
+                    <label>Your Connection ID:</label>
+                    <div class="input-group">
+                        <input type="text" id="localId" placeholder="Click Generate ID" readonly>
+                        <button id="generateId" class="copy"><i class="fas fa-qrcode"></i> Generate ID</button>
+                        <button id="copyLocalId" class="copy" disabled><i class="fas fa-copy"></i> Copy</button>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label>Connect to Another User:</label>
+                    <div class="input-group">
+                        <input type="text" id="remoteId" placeholder="Enter their connection ID">
+                        <button id="connectBtn" disabled><i class="fas fa-link"></i> Connect</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="status">
+                <div class="status-indicator"></div>
+                <span id="statusText">Not connected - Generate an ID to start</span>
+            </div>
+        </div>
+        
+        <div class="chat-container" id="chatWindow">
+            <div class="chat-header">
+                <div class="logo">
+                    <i class="fas fa-comments"></i>
+                    <h1>Peer-to-Peer Chat</h1>
+                </div>
+                <div class="status">
+                    <div class="status-indicator" id="chatStatusIndicator"></div>
+                    <span id="chatStatusText">Connecting...</span>
+                </div>
+            </div>
+            
+            <div class="chat-area" id="chatArea">
+                <div class="message system">
+                    <div>Setting up secure peer-to-peer connection...</div>
+                </div>
+            </div>
+            
+            <div class="typing-indicator" id="typingIndicator">
+                <span id="typingText"></span>
+            </div>
+            
+            <div class="input-area">
+                <input type="text" class="message-input" id="messageInput" placeholder="Type a message..." disabled>
+                <button class="send-btn" id="sendButton" disabled>
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+            
+            <div class="user-info">
+                <div class="user">
+                    <div class="user-avatar">A</div>
+                    <span>You</span>
+                </div>
+                <div class="user">
+                    <div class="user-avatar">B</div>
+                    <span id="remoteUserName">Connecting...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="notification" id="notification">
+        <i class="fas fa-check-circle"></i>
+        <span id="notificationText">Copied to clipboard!</span>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM elements
+            const generateIdBtn = document.getElementById('generateId');
+            const copyLocalIdBtn = document.getElementById('copyLocalId');
+            const connectBtn = document.getElementById('connectBtn');
+            const localIdInput = document.getElementById('localId');
+            const remoteIdInput = document.getElementById('remoteId');
+            const statusText = document.getElementById('statusText');
+            const chatWindow = document.getElementById('chatWindow');
+            const chatArea = document.getElementById('chatArea');
+            const messageInput = document.getElementById('messageInput');
+            const sendButton = document.getElementById('sendButton');
+            const typingIndicator = document.getElementById('typingIndicator');
+            const typingText = document.getElementById('typingText');
+            const chatStatusText = document.getElementById('chatStatusText');
+            const chatStatusIndicator = document.getElementById('chatStatusIndicator');
+            const remoteUserName = document.getElementById('remoteUserName');
+            const notification = document.getElementById('notification');
+            const notificationText = document.getElementById('notificationText');
+            
+            // Peer connection variables
+            let peer;
+            let localConnectionId;
+            let remoteConnectionId;
+            let connection;
+            
+            // Generate random ID
+            function generateId() {
+                return Math.random().toString(36).substring(2, 10) + Math.random().toString(36).substring(2, 10);
+            }
+            
+            // Show notification
+            function showNotification(message, isSuccess = true) {
+                notificationText.textContent = message;
+                notification.className = isSuccess ? 'notification success' : 'notification error';
+                notification.classList.add('show');
+                
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 3000);
+            }
+            
+            // Initialize connection
+            generateIdBtn.addEventListener('click', () => {
+                localConnectionId = generateId();
+                localIdInput.value = localConnectionId;
+                copyLocalIdBtn.disabled = false;
+                connectBtn.disabled = false;
+                statusText.textContent = 'ID generated - Share this with your friend!';
+                showNotification('Connection ID generated!');
+            });
+            
+            // Copy ID to clipboard
+            copyLocalIdBtn.addEventListener('click', () => {
+                localIdInput.select();
+                document.execCommand('copy');
+                showNotification('Copied to clipboard!');
+            });
+            
+            // Connect to another peer
+            connectBtn.addEventListener('click', () => {
+                remoteConnectionId = remoteIdInput.value.trim();
+                if (!remoteConnectionId) {
+                    showNotification('Please enter a connection ID', false);
+                    return;
+                }
+                
+                if (remoteConnectionId === localConnectionId) {
+                    showNotification("You can't connect to yourself!", false);
+                    return;
+                }
+                
+                statusText.textContent = 'Connecting to ' + remoteConnectionId + '...';
+                
+                // Initialize peer connection
+                initializePeer();
+            });
+            
+            // Initialize peer connection
+            function initializePeer() {
+                // Create peer instance
+                peer = new SimplePeer({
+                    initiator: !!localConnectionId,
+                    trickle: false
+                });
+                
+                // When we get a signal, send it to the other peer
+                peer.on('signal', data => {
+                    // In a real app, you'd send this data to the other peer via a signaling server
+                    // For this demo, we'll just log it and assume both users are on the same page
+                    console.log('SIGNAL', JSON.stringify(data));
+                });
+                
+                // When we receive data from the other peer
+                peer.on('data', data => {
+                    const message = data.toString();
+                    
+                    if (message.startsWith('typing:')) {
+                        // Handle typing indicator
+                        const isTyping = message.split(':')[1] === 'true';
+                        if (isTyping) {
+                            typingText.textContent = remoteUserName.textContent + ' is typing...';
+                            typingIndicator.style.display = 'block';
+                        } else {
+                            typingIndicator.style.display = 'none';
+                        }
+                    } else {
+                        // Add received message to chat
+                        addMessageToChat(message, 'received');
+                    }
+                });
+                
+                // When the connection is established
+                peer.on('connect', () => {
+                    // Show chat UI
+                    chatWindow.style.display = 'flex';
+                    
+                    // Update UI
+                    chatStatusIndicator.style.background = '#4CAF50';
+                    chatStatusText.textContent = 'Connected to ' + remoteConnectionId;
+                    messageInput.disabled = false;
+                    sendButton.disabled = false;
+                    remoteUserName.textContent = 'User ' + remoteConnectionId.substring(0, 6);
+                    
+                    // Add connection message
+                    addSystemMessage('You are now connected! Start chatting...');
+                });
+                
+                // Handle errors
+                peer.on('error', err => {
+                    console.error('Peer error:', err);
+                    addSystemMessage('Connection error: ' + err.message, true);
+                    chatStatusIndicator.style.background = '#f44336';
+                    chatStatusText.textContent = 'Connection failed';
+                });
+                
+                // Close connection
+                peer.on('close', () => {
+                    addSystemMessage('Connection closed');
+                    chatStatusIndicator.style.background = '#f44336';
+                    chatStatusText.textContent = 'Disconnected';
+                    messageInput.disabled = true;
+                    sendButton.disabled = true;
+                });
+            }
+            
+            // Send message function
+            function sendMessage() {
+                const messageText = messageInput.value.trim();
+                if (messageText && peer && peer.connected) {
+                    // Add to chat as sent
+                    addMessageToChat(messageText, 'sent');
+                    
+                    // Send to peer
+                    peer.send(messageText);
+                    
+                    // Clear input
+                    messageInput.value = '';
+                }
+            }
+            
+            // Typing indicator
+            messageInput.addEventListener('input', function() {
+                if (!peer || !peer.connected) return;
+                
+                // Send typing status
+                const isTyping = this.value.length > 0;
+                peer.send(`typing:${isTyping}`);
+            });
+            
+            // Add message to chat area
+            function addMessageToChat(message, type) {
+                const messageElement = document.createElement('div');
+                messageElement.classList.add('message', type);
+                
+                messageElement.innerHTML = `
+                    <div>${message}</div>
+                    <div class="message-info">
+                        <span>${type === 'sent' ? 'You' : remoteUserName.textContent}</span>
+                        <span>${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
+                `;
+                
+                chatArea.appendChild(messageElement);
+                chatArea.scrollTop = chatArea.scrollHeight;
+            }
+            
+            function addSystemMessage(message) {
+                const messageElement = document.createElement('div');
+                messageElement.classList.add('message', 'system');
+                messageElement.textContent = message;
+                chatArea.appendChild(messageElement);
+                chatArea.scrollTop = chatArea.scrollHeight;
+            }
+            
+            // Event listeners
+            sendButton.addEventListener('click', sendMessage);
+            
+            messageInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+            
+            // For demo purposes - simulate peer connection without signaling server
+            // In a real app, you'd need a signaling server to exchange connection data
+            window.simulatePeerConnection = function() {
+                if (!localConnectionId || !remoteConnectionId) return;
+                
+                // Simulate connection
+                setTimeout(() => {
+                    chatWindow.style.display = 'flex';
+                    chatStatusIndicator.style.background = '#4CAF50';
+                    chatStatusText.textContent = 'Connected to ' + remoteConnectionId;
+                    messageInput.disabled = false;
+                    sendButton.disabled = false;
+                    remoteUserName.textContent = 'User ' + remoteConnectionId.substring(0, 6);
+                    addSystemMessage('You are now connected! Start chatting...');
+                    
+                    // Add a welcome message from the other user
+                    setTimeout(() => {
+                        addMessageToChat('Hello there! 👋', 'received');
+                    }, 1000);
+                }, 1500);
+            };
+        });
+    </script>
+    
+    <!-- SimplePeer library for WebRTC connections -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/simple-peer/9.11.1/simplepeer.min.js"></script>
+</body>
+</html>
